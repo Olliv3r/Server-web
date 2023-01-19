@@ -10,6 +10,7 @@ wget https://raw.githubusercontent.com/Olliv3r/Server-web/main/server.sh
 cp server.sh $PREFIX/bin/server
 chmod +x $PREFIX/bin/server
 server
+[ -f server.sh ] && rm server.sh
 echo -e "\e[32mGerencie o servidor web com este script\nAltere o script ao seu gosto\n\e[0m"
 ```
 
