@@ -11,7 +11,7 @@ cp server.sh $PREFIX/bin/server
 chmod +x $PREFIX/bin/server
 server
 [ -f server.sh ] && rm server.sh
-echo -e "\e[32mGerencie o servidor web com este script\nAltere o script ao seu gosto\n\e[0m"
+echo -e "\e[32mGerencie o servidor web com este script\nAltere o script e troque o usuário oliver pelo seu\n\e[0m"
 ```
 
 ## Gerencie o servidor web
