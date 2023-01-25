@@ -35,7 +35,7 @@
 # Licença: MIT License
 #
 # Versão 1: Inicia ou encerra serviços apache,mysqld_safe e# 	       mariadb
-# Versão 2: Adicionada suporte a opção --status para
+# Versão 1.1: Adicionada suporte a opção --status para
 #           verificar estado de serviços:
 #           apache,mysqld_safe e mariadb
 #
