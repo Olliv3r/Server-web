@@ -66,6 +66,16 @@ Opçôes:
 
 ### FUNCIONALIDADES ###
 
+banner() {
+echo -e "
+███─███─████─█─█─███─████─────█───█─███─████─
+█───█───█──█─█─█─█───█──█─────█───█─█───█──██
+███─███─████─█─█─███─████─███─█─█─█─███─████─              ──█─█───█─█──███─█───█─█──────█████─█───█──██              ███─███─█─█───█──███─█─█───────█─█──███─████─
+\n
+$(mostrar_versao)
+"
+}
+
 # Extrai a versão diretamente do cabeçalho
 mostrar_versao() {
     echo -n "$(basename "$0")"
@@ -197,7 +207,7 @@ status() {
 
 ### TRATAMENTO DAS OPÇÔES
 
-test -z "$1" && cat ./banner && echo -e "\nTente --help" && exit 1
+test -z "$1" && banner && echo -e "\nTente --help" && exit 1
 
 # Tratando opçôes
 while test -n "$1" ; do

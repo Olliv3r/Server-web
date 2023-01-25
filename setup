@@ -2,13 +2,14 @@
 # setup - configura server-web para uso global
 #
 
+printf "\r\e[*] Configurando..."
 apt update -y > /dev/null 2>&1
 apt install git -y > /dev/null 2>&1
 git clone https://github.com/Olliv3r/Server-web > /dev/null 2>&1
 cd Server-web
 cp server-web $PREFIX/bin
 chmod +x $PREFIX/bin/server-web
-
+printf "\r\e[+] Configurando...OK\n"
 server-web
 
 [ -d ~/Server-web ] && rm -rf ~/Server-web
