@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 #
 # server.sh - Gerencia servidor web no linux termux
-# Obs.: Usa o apachectl e httpd como base pra gerenciamento# 	   dos serviços
+# Obs.: Usa o apachectl e httpd como base pra gerenciamento
+#       dos serviços
 #
 # Site      : http://programadorboard.epizy.com/autor
 # Autor     : Oliver Silva <programadorboard@gmail.com>
