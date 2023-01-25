@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+# setup - configura server-web para uso global
+#
+
+apt update -y > /dev/null 2>&1
+apt install git -y > /dev/null 2>&1
+git clone https://github.com/Olliv3r/Server-web > /dev/null 2>&1
+cd Server-web
+cp server-web $PREFIX/bin
+chmod +x $PREFIX/bin/server-web
+
+server-web
+
+[ -d Server-web ] && rm -rf Server-web
+sleep 1
+echo -e "\e[32mGerencie o servidor web com este script\nAltere o script e troque o usuário 'oliver' pelo usuário do mysql\e[0m"
