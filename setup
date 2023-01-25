@@ -11,6 +11,6 @@ chmod +x $PREFIX/bin/server-web
 
 server-web
 
-[ -d Server-web ] && rm -rf Server-web
+[ -d ~/Server-web ] && rm -rf ~/Server-web
 sleep 1
 echo -e "\e[32mGerencie o servidor web com este script\nAltere o script e troque o usuário 'oliver' pelo usuário do mysql\e[0m"
