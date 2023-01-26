@@ -30,14 +30,22 @@
 # v1.0 2022-11-10, Oliver Silva:
 #     - Versão inicial iniciando ou encerrando servidor web
 # v1.1 2023-01-05, Oliver Silva:
-#     - Adicionada verificação de status de serviços ativos#     ou inativos
+#     - Adicionada verificação de status de serviços ativos ou inativos
+# v1.2 2022-02-02, Oliver Silva:
+#     - Adicionada verificação de requisitos
+#
 # 
 # Licença: MIT License
 #
-# Versão 1: Inicia ou encerra serviços apache,mysqld_safe e# 	       mariadb
+# Versão 1: Adicionada suporte as opçôes --start e --stop
+#           para iniciar ou encerrar serviços apache,mysqld_safe e mariadb
+#
 # Versão 1.1: Adicionada suporte a opção --status para
 #           verificar estado de serviços:
 #           apache,mysqld_safe e mariadb
+#
+# Versão 1.2: Adicionada suporte a verificação de requisitos
+#
 #
 
 ### VARIÁVEIS ###
@@ -54,6 +62,12 @@ apache=$(ps -e | grep -o "httpd")
 mysqld_safe=$(ps -e | grep -o "mysqld_safe")
 mariadb=$(ps -e | grep -o "mariadbd")
 
+# Requisitos
+req=(
+    "mysqld_safe"
+    "httpd"
+)
+
 # Ajuda
 ajuda_modo_uso="Modo de uso: $(basename "$0") [OPÇÃO]
 Opçôes:
@@ -66,14 +80,26 @@ Opçôes:
 
 ### FUNCIONALIDADES ###
 
+# Banner
 banner() {
-echo -e "
+echo -e "\e[31;1m
 ███─███─████─█─█─███─████─────█───█─███─████─
 █───█───█──█─█─█─█───█──█─────█───█─█───█──██
-███─███─████─█─█─███─████─███─█─█─█─███─████─              ──█─█───█─█──███─█───█─█──────█████─█───█──██              ███─███─█─█───█──███─█─█───────█─█──███─████─
+███─███─████─█─█─███─████─███─█─█─█─███─████─
+──█─█───█─█──███─█───█─█──────█████─█───█──██         ███─███─█─█───█──███─█─█───────█─█──███─████─
 \n
-$(mostrar_versao)
+\e[32;2;3m$(mostrar_versao | tr A-Z a-z)\e[0m
 "
+}
+
+# Verificar requisitos
+verificar_req() {
+    for ((indice = 0; indice < ${#req[*]}; indice++)) ; do
+	if [ ! -f ${PREFIX}/bin/${req[indice]} ] ; then
+	    echo -e "\e[34m[\e[33m!\e[34m] Dependencia => \e[31;1m${req[indice]}\e[0m\e[34m, acesse => \e[32;2;3mhttps://github.com/Olliv3r/Web-Server\e[0m\e[34m para configurar o servidor web\e[0m"
+	    exit 1
+	fi
+    done   
 }
 
 # Extrai a versão diretamente do cabeçalho
@@ -207,7 +233,8 @@ status() {
 
 ### TRATAMENTO DAS OPÇÔES
 
-test -z "$1" && banner && echo -e "\nTente --help" && exit 1
+test -z "$1" && banner && echo -e "\n\e[0m[\e[33m!\e[0m] Parâmetro necessário, tente --help\e[0m" && exit 1
+test -n "$1" && verificar_req
 
 # Tratando opçôes
 while test -n "$1" ; do
@@ -218,7 +245,8 @@ while test -n "$1" ; do
 	--start) c_start=1;;
 	--stop) c_stop=1;;
 	*)
-	echo "Opção inválida: tente $(basename "$0") --help";;
+	banner
+	echo -e "\e[0m[\e[33m!\e[0m] Opção inválida: tente $(basename "$0") --help";;
     esac
     shift
 done
