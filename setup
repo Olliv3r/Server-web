@@ -10,7 +10,7 @@ cd Server-web
 cp server-web $PREFIX/bin
 chmod +x $PREFIX/bin/server-web
 #printf "\r\e[34m[+] Configurando...OK\n\e[0m"
-server-web
+#server-web
 #[ -d ~/Server-web ] && rm -rf ~/Server-web
 sleep 1
 cd ~
