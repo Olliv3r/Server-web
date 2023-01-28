@@ -116,7 +116,7 @@ apache() {
 
 # Inicia serviço mysqld_safe
 mysql_start() {
-    mysqld_safe -u oliver > /dev/null 3>&2 &
+    mysqld_safe -u root > /dev/null 3>&2 &
 }
 
 # Encerra serviço mysqld_safe e mariadb
