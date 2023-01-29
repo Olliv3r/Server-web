@@ -3,7 +3,7 @@ Gerenciador de serviços httpd, mysqld_safe e mariadb
 ![Main](https://github.com/Olliv3r/Server-web/blob/main/media/main.jpg)
 ## Instalação
 ```
-source <(curl -fsSL https://raw.githubusercontent.com/Olliv3r/Server-web/main/setup)
+apt update && apt upgrade -y && apt install git -y && cd ~ && git clone https://github.com/Olliv3r/Server-web && cd Server-web && bash setup     
 ```
 
 ## Gerencie o servidor web
