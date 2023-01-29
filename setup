@@ -1,16 +1,10 @@
-#!/usr/bin/env bash
-# setup - configura server-web para gerenciar apache e mysql
-#
+apt update
+apt upgrade -y
 
-#printf "\r\e[34m[*] Configurando...\e[0m"
-apt update -y > /dev/null 2>&1
-apt install git -y > /dev/null 2>&1
-git clone https://github.com/Olliv3r/Server-web > /dev/null 2>&1
-cd Server-web
-cp server-web $PREFIX/bin
-chmod +x $PREFIX/bin/server-web
-#printf "\r\e[34m[+] Configurando...OK\n\e[0m"
-#server-web
-#[ -d ~/Server-web ] && rm -rf ~/Server-web
-sleep 1
-cd ~
+printf "\rConfigurando gerenciador..."
+apt install curl -y > /dev/null 2>&1
+curl -LO https://raw.githubusercontent.com/Olliv3r/Server-web/main/server-web > /dev/null 2>&1
+chmod +x server-web
+mv server-web $PREFIX/bin
+printf "\rConfigurando gerenciador...OK"
+server-web
