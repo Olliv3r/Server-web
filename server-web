@@ -15,19 +15,30 @@
 #
 # Exemplo:
 #
-#   $ ./server-web --status
-#   [!] Apache NO
-#   [!] MySQLd NO
+#   $ ./server-web --version
+#   server-web versão 1.4
 #
 #   $ ./server-web --start
-#   [+] Servidor Web Iniciando...OK
+#   [*] Servidor Web iniciando...OK
+#
+#   $ ./server-web --status
+#   [+] Apache OK
+#   [+] MariaDB Ok
 #
 #   $ ./server-web --stop
 #   [+] Servidor Web encerrando...OK
 #
-#   $ ./server-web --apache-start
-#   $ ./server-web --apache-restart
-#   $ ./server-web --apache-stop
+#   $ ./server-web --start --verbose
+#   [*] Servidor Web iniciando...OK
+#   [+] Htdocs padrão: http://localhost:8080
+#   [+] Htdocs redirecionado: https://localhost:8443
+#   [+] PhpMyAdmin: https://localhost:8443/phpmyadmin
+#
+#   $ ./server-web --apache-start --verbose
+#   [+] Iniciando Apache...OK
+#   [+] Htdocs padrão: http://localhost:8080
+#   [+] Htdocs redirecionado: https://localhost:8443
+#
 #
 # Histórico:
 #
@@ -39,6 +50,8 @@
 #     - Adicionada verificação de requisitos
 # v1.3 2023-02-01, Oliver Silva:
 #     - Adicionada funçôes para iniciar, reiniciar e parar o servidor apache
+# v1.4 2023-02-03, Oliver Silva:
+#     - Adicionada suporte ao modo verbose
 #
 #
 # Licença: MIT License
@@ -47,12 +60,12 @@
 #           para iniciar ou encerrar serviços apache,mysqld_safe e mariadb
 #
 # Versão 1.1: Adicionada suporte a opção --status para
-#           verificar estado de serviços:
-#           apache,mysqld_safe e mariadb
+#           verificar estado de serviços
 #
 # Versão 1.2: Adicionada suporte a verificação de requisitos
-# Versão 1.3: Adicionada suporte as opçôs --apache-start
+# Versão 1.3: Adicionada suporte as opçôes --apache-start
 #	      apache-stop e apache-restart
+# Versão 1.4: Adicionada suporte a opção --verbose
 #
 
 ### VARIÁVEIS ###
@@ -66,6 +79,7 @@ c_service_stop=0	# Chave desligada
 c_apache_start=0  	# Chave desligada
 c_apache_stop=0		# Chave desligada
 c_apache_restart=0	# Chave desligada
+c_verbose=0		# Chave desligada
 
 # Processos
 apache=$(ps -e | grep -o "httpd")
@@ -85,6 +99,7 @@ Opçôes:
     --apache-start    Inicia o servidor Apache
     --apache-stop     Encerra o servidor Apache
     --apache-restart  Reinicia o servidor Apache
+    --verbose 	      Mostra informaçôes para acessar os serviços
 "
 
 ### FUNCIONALIDADES ###
@@ -140,7 +155,7 @@ check_req() {
 # Extrai a versão diretamente do cabeçalho
 mostrar_versao() {
     echo -n "$(basename "$0")"
-    grep "^# Versão" "$0" | tail -1 | cut -d : -f 1 | tr -d \#
+    grep "^# Versão" "$0" | tail -1 | cut -d : -f 1 | tr -d \# | tr A-Z a-z
 }
 
 # Função para iniciar ou encerrar o servidor apache
@@ -148,7 +163,6 @@ apache() {
     if [ -n "$2" ] ; then
         printf "\r\e[34m[*] $2 Apache...\e[0m"
         apachectl -k "$1" > /dev/null 3>&2
-        sleep 0.5
         printf "\r\e[34m[+] $2 Apache...OK\n\e[0m"
     fi
 
@@ -175,11 +189,20 @@ mysql_stop() {
     pkill mariadb > /dev/null 3>&2
 }
 
+# Informaçôes de acesso ao host
+apache_verbose() {
+    echo -e "\e[34m[\e[32;1m+\e[0m\e[34m] Htdocs padrão: \e[32;2;4mhttp://localhost:8080\e[0m"
+    sleep 0.1
+    echo -e "\e[34m[\e[32;1m+\e[0m\e[34m] Htdocs redirecionado: \e[32;2;4mhttps://localhost:8443\e[0m"
+}
+phpmyadmin_verbose() {
+    echo -e "\e[34m[\e[32;1m+\e[0m\e[34m] PhpMyAdmin: \e[32;2;4mhttps://localhost:8443/phpmyadmin\e[0m"
+}
+
 # Inicia servidor web
 start() {
     if [ -n "$apache" -a -n "$mysqld_safe" -a -n "$mariadb" ] ; then
 	echo -e "\e[34m[\e[33;1m!\e[0m\e[34m] Servidor Web ja está rodando\e[0m"
-        sleep 0.5
         status "\e[33;1m!\e[0m"
     fi
 
@@ -198,7 +221,6 @@ start() {
         printf "\r\e[34m[*] Servidor Web iniciando...\e[0m"
         apache "start"
         mysql_start
-        sleep 0.5
         printf "\r\e[34m[*] Servidor Web iniciando...OK\e[0m\n"
     fi
 }
@@ -209,7 +231,6 @@ stop() {
 	printf "\r\e[34m[*] Servidor Web encerrando...\e[0m"
 	apache "stop"
 	mysql_stop
-	sleep 0.5
 	printf "\r\e[34m[+] Servidor Web encerrando...OK\n\e[0m"
     fi
 
@@ -217,7 +238,6 @@ stop() {
 	printf "\r\e[34m[\e[33;1m!\e[0m\e[34m] MariaDB ja está encerrado\n\e[0m"
 	printf "\r\e[34m[*] Apache encerrando...\e[0m"
 	apache "stop"
-	sleep 0.5
 	printf "\r\e[34m[+] Apache encerrando...OK\n\e[0m"
     fi
 
@@ -225,13 +245,11 @@ stop() {
 	echo -e "\e[34m[\e[33;1m!\e[0m\e[34m] Apache ja está encerrado\e[0m"
 	printf "\r\e[34m[*] MariaDB encerrando...\e[0m"
 	mysql_stop
-	sleep 0.5
 	printf "\r\e[34m[+] MariaDB encerrando...OK\n\e[0m"
     fi
 
     if [ -z "$apache" -a -z "$mysqld_safe" -a -z "$mariadb" ] ; then
 	echo -e "\e[34m[\e[33;1m!\e[0m\e[34m] Servidor Web ja está parado\e[0m"
-        sleep 0.5
         status "\e[33;1m!\e[0m"
     fi
 }
@@ -240,22 +258,18 @@ stop() {
 status() {
     if [ -n "$apache" -a -n "$mysqld_safe" -a -n "$mariadb" ] ; then
         echo -e "\e[34m[\e[33;1m$1\e[34m] Apache \e[32;1mOK\e[0m"
-	sleep 0.5
 	echo -e "\e[34m[\e[33;1m$1\e[34m] MariaDB \e[32;1mOk\e[0m"
 
     elif [ -n "$apache" -a -z "$mysqld_safe" -a -z "$mariadb" ] ; then
 	echo -e "\e[34m[\e[33;1m$1\e[34m] Apache \e[32;1mOK\e[0m"
-	sleep 0.5
 	echo -e "\e[34m[\e[33;1m$1\e[34m] MariaDB \e[31;1mNO\e[0m"
 
     elif [ -z "$apache" -a -n "$mysqld_safe" -a -n "$mariadb" ] ; then
 	echo -e "\e[34m[\e[33;1m$1\e[34m] Apache \e[31;1mNO\e[0m"
-	sleep 0.5
 	echo -e "\e[34m[\e[33;1m$1\e[34m] MariaDB \e[32;1mOK\e[0m"
 
     else
 	echo -e "\e[34m[\e[33;1m$1\e[34m] Apache \e[31;1mNO\e[0m"
-	sleep 0.5
 	echo -e "\e[34m[\e[33;1m$1\e[34m] MariaDB \e[31;1mNO\e[0m"
     fi
 }
@@ -299,6 +313,7 @@ while test -n "$1" ; do
         --apache-start) c_apache_start=1;;
 	--apache-stop) c_apache_stop=1;;
         --apache-restart) c_apache_restart=1;;
+	--verbose) c_verbose=1;;
 	*)
 	banner
 	echo -e "\e[0m[\e[33m!\e[0m] Opção inválida: tente $(basename "$0") --help";;
@@ -309,11 +324,44 @@ done
 ### EXECUÇÃO ###
 
 # Verificando chaves se estão ativas
-[ $c_modo_uso -eq 1 ] && echo -e "$ajuda_modo_uso" && exit 0
-[ $c_versao -eq 1 ] && mostrar_versao && exit 0
-[ $c_service_status -eq 1 ] && status "+\e[0m" && exit 0
-[ $c_service_start -eq 1 ] && start && exit 0
-[ $c_service_stop -eq 1 ] && stop && exit 0
-[ $c_apache_start -eq 1 ] && apache_start && exit 0
-[ $c_apache_stop -eq 1 ] && apache_stop && exit 0
-[ $c_apache_restart -eq 1 ] && apache_restart && exit 0
+if [ $c_modo_uso -eq 1 ] ; then
+    echo -e "$ajuda_modo_uso" && exit 0
+
+elif [ $c_versao -eq 1 ] ; then
+    mostrar_versao && exit 0
+
+elif [ $c_service_status -eq 1 ] ; then
+    status "+\e[0m" && exit 0
+
+elif [ $c_service_start -eq 1 -a $c_verbose -eq 0 ] ; then
+    start && exit 0
+
+elif [ $c_service_start -eq 1 -a $c_verbose -eq 1 ] ; then
+    start
+    apache_verbose
+    phpmyadmin_verbose
+    exit 0
+
+elif [ $c_service_stop -eq 1 ] ; then
+    stop && exit 0
+
+elif [ $c_apache_start -eq 1 -a $c_verbose -eq 1 ] ; then
+    apache_start
+    apache_verbose
+    exit 0
+    
+elif [ $c_apache_start -eq 1 -a $c_verbose -eq 0 ] ; then
+    apache_start
+    exit 0
+
+elif [ $c_apache_stop -eq 1 ] ; then
+    apache_stop
+    exit 0
+
+elif [ $c_apache_restart -eq 1 ] ; then
+    apache_restart
+    exit 0
+
+else
+    echo "Erro ao processar comando!" && exit 1
+fi
