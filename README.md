@@ -6,16 +6,7 @@ Gerenciador de serviços httpd, mysqld_safe e mariadb
 source <(curl -fsSL https://raw.githubusercontent.com/Olliv3r/Server-web/main/setup)
 ```
 
-## Gerencie:
-### Verifique o status:
+### Uso:
 ```
-server-web --status
-```
-### Iniciar:
-```
-server-web --start
-```
-### Encerrar:
-```
-server-web --stop
+server-web -h
 ```
