@@ -1,5 +1,5 @@
-# Server-web
-Gerenciador de serviços httpd, mysqld_safe e mariadb
+# Server web
+Gerenciador de serviços mysql e apache no termux
 ![Main](https://github.com/Olliv3r/Server-web/blob/main/media/main.jpg)
 ## Instalação
 ```
