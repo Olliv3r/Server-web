@@ -87,6 +87,9 @@ mariadb=$(ps -e | grep -o "mariadbd")
 
 reqList=("mariadb" "httpd")
 
+host="localhost"
+ports=("8080" "8443")
+
 # Ajuda
 helper() {
     echo -e "Uso: $(basename "$0") [OPÇÔES]
@@ -135,113 +138,127 @@ version() {
     exit 0
 }
 
-# Função para iniciar ou encerrar o servidor apache
+# Função para iniciar, reiniciar e parar o serviço apache
 apache() {
     if [ -n "$1" ] ; then
-        printf "\r\e[34m[*] Apache starging...\e[0m"
-        apachectl -k "$1" > /dev/null 3>&2
-        printf "\r\e[34m[+] Apache starting...OK\n\e[0m"
+	if [ "$1" == "start" ] ; then
+	    printf "\r\e[0m\e[34;1m[*] Apache starging...\e[0m"
+	    apachectl -k "$1" > /dev/null 3>&2
+	    printf "\r\e[0m\e[34;1m[+] Apache starting...OK\n\e[0m"
+
+	elif [ "$1" == "stop" ] ; then
+	    printf "\r\e[0m\e[34;1m[*] Apache stopping...\e[0m"
+	    apachectl -k "$1" > /dev/null 3>&2
+	    printf "\r\e[0m\e[34;1m[+] Apache stopping...OK\n\e[0m"
+
+	else
+	    printf "\r\e[0m\e[34;1m[*] Apache restarting...\e[0m"
+	    apachectl -k "$1" > /dev/null 3>&2
+	    printf "\r\e[0m\e[34;1m[+] Apache restarting...OK\n\e[0m"
+
+	fi
+    
+    else
+	echo -e "[!] Expecifique a ação para o Apache"
+	exit 1
     fi
 }
 
-# Função para iniciar o serviço MariaDB
-mysql_start() {
-    printf "\r\e[34m[*] MySQL starging...\e[0m"
-    mysqld_safe -u root > /dev/null 3>&2 &
-    printf "\r\e[34m[+] MySQL starting...OK\n\e[0m"
-}
-
 # Função para encerrar o serviço MariaDB
-mysql_stop() {
-    pkill mariadb > /dev/null 3>&2
+mysql() {
+    if [ -n "$1" ] ; then
+	if [ "$1" == "start" ] ; then
+	    printf "\r\e[0m\e[34;1m[*] MySQL starting...\e[0m"
+	    mysqld_safe -u root > /dev/null 3>&2 &
+	    printf "\r\e[0m\e[34;1m[+] MySQL starting...OK\n\e[0m"
+
+        else
+	    printf "\r\e[0m\e[34;1m[*] MySQL stopping...\e[0m"
+	    pkill mariadb > /dev/null 3>&2
+	    printf "\r\e[0m\e[34;1m[+] MySQL stopping...OK\n\e[0m"
+
+	fi
+
+    else
+	echo -e "[!] Expecifique a ação para o MySQL"
+	exit 1
+    fi
 }
 
 # Informaçôes de acesso ao host
-apache_verbose() {
-    echo -e "\e[34m[+] Default Access: \e[32;2;4mhttp://localhost:8080\e[0m"
+apacheVerbose() {
+    echo -e "\e[0m\e[34;1m[+] Default Access: \e[32;2mhttp://${host}:${ports[0]}\e[0m"
     sleep 0.1
-    echo -e "\e[34m[+] Redirected Access: \e[32;2;4mhttps://localhost:8443\e[0m"
+    echo -e "\e[0m\e[34;1m[+] Redirected Access: \e[32;2mhttps://${host}:${ports[1]}\e[0m"
 }
-phpmyadmin_verbose() {
-    echo -e "\e[34m[+] Phpmyadmin Access: \e[32;2;4mhttps://localhost:8443/phpmyadmin\e[0m"
+phpmyadminVerbose() {
+    echo -e "\e[0m\e[34;1m[+] Phpmyadmin Access: \e[32;2mhttps://${host}:${ports[1]}/phpmyadmin\e[0m"
 }
 
 # Inicia servidor web
 start() {
     if [ -n "$apache" -a -n "$mysqld_safe" -a -n "$mariadb" ] ; then
-        statusVerify 
+        statusVerify
+	exit 0
 
     elif [ -n "$apache" -a -z "$mysqld_safe" -a -z "$mariadb" ] ; then
 	apache "restart"
-	mysql_start
+	mysql "start"
 
     elif [ -z "$apache" -a -n "$mysqld_safe" -a -n "$mariadb" ] ; then
 	apache "start"
-	mysql_stop
-	mysql_start
+	mysql "stop" > /dev/null 2>&1
+	mysql "start"
 
     else
         apache "start"
-        mysql_start
+        mysql "start"
     fi
 }
 
 # Encerra os serviços
 stop() {
     if [ -n "$apache" -a -n "$mysqld_safe" -a -n "$mariadb" ] ; then
-	printf "\r\e[34m[*] Apache stopping...\e[0m"
-	apache "stop" > /dev/null 2>&1
-	printf "\r\e[34m[+] Apache stopping...OK\n\e[0m"
-
-	printf "\r\e[34m[*] MySQL stopping...\e[0m"
-	mysql_stop
-	printf "\r\e[34m[+] MySQL stopping...OK\n\e[0m"
+	apache "stop"
+	mysql "stop"
 
     elif [ -n "$apache" -a -z "$mysqld_safe" -a -z "$mariadb" ] ; then
-	printf "\r\e[34m[*] Apache stopping...\e[0m"
-	apache "stop" > /dev/null 2>&1
-
-	printf "\r\e[34m[+] Apache stopping...OK\n\e[0m"
-	echo -e "\e[33m[!] MySQL is already stopped\e[0m"
+	apache "stop"
+	echo -e "\e[0m\e[33;1m[!] MySQL is already stopped\e[0m"
 
     elif [ -z "$apache" -a -n "$mysqld_safe" -a -n "$mariadb" ] ; then
-	echo -e "\e[33m[!] Apache is already stopped\e[0m"
-
-	printf "\r\e[34m[*] MySQL stopping...\e[0m"
-	mysql_stop
-	printf "\r\e[34m[+] MySQL stopping...OK\n\e[0m"
+        echo -e "\e[0m\e[33;1m[!] Apache is already stopped\e[0m"
+	mysql "stop"
 
     else
         statusVerify
     fi
 }
 
-# Verifica o status dos serviços
+# Verifica o status dos serviços Apache e MySQL
 statusVerify() {
     if [ -n "$apache" -a -n "$mysqld_safe" -a -n "$mariadb" ] ; then
-	echo -e "\e[33m[+] Apache is running\e[0m"
-	echo -e "\e[33m[+] MySQL is running\e[0m"
+	echo -e "\e[0m\e[33;1m[+] Apache is running\e[0m"
+	echo -e "\e[0m\e[33;1m[+] MySQL is running\e[0m"
 
     elif [ -n "$apache" -a -z "$mysqld_safe" -a -z "$mariadb" ] ; then
-	echo -e "\e[34m[+] Apache is running\e[0m"
-	echo -e "\e[33m[!] MySQL not running\e[0m"
+	echo -e "\e[0m\e[34;1m[+] Apache is running\e[0m"
+	echo -e "\e[0m\e[33;1m[!] MySQL is not running\e[0m"
 
     elif [ -z "$apache" -a -n "$mysqld_safe" -a -n "$mariadb" ] ; then
-	echo -e "\e[33m[!] Apache not running\e[0m"
-	echo -e "\e[34m[+] MySQL is running\e[0m"
+	echo -e "\e[0m\e[33;1m[!] Apache is not running\e[0m"
+	echo -e "\e[0m\e[34;1m[+] MySQL is running\e[0m"
 
     else
-	echo -e "\e[33m[!] Apache not running\e[0m"
-	echo -e "\e[33m[!] MySQL not running\e[0m"
+	echo -e "\e[0m\e[33;1m[!] Apache is not running\e[0m"
+	echo -e "\e[0m\e[33;1m[!] MySQL is not running\e[0m"
     fi
-
-    exit 0
 }
 
 # Inicia o servidor apache
-apache_start() {
+apacheStart() {
     if [ -n "$apache" ] ; then
-	echo -e "\e[33m[!] Apache is already runnig\e[0m"
+	echo -e "\e[33m[!] Apache is already running\e[0m"
 	exit 1
     else
         apache "start"
@@ -249,18 +266,19 @@ apache_start() {
 }
 
 # Encerra o servidor apache
-apache_stop() {
+apacheStop() {
     if [ -z "$apache" ] ; then
 	echo -e "\e[33m[!] Apache is already stopped\e[0m"
     else
+	
         apache "stop"
     fi
 }
 
 # Reinicia o servidor apache
-apache_restart() {
+apacheRestart() {
     if [ -z "$apache" ] ; then
-	echo -e "\e[33m[!] Apache is not runnig, try to start it\e[0m"
+	echo -e "\e[0m\e[33;1m[!] Apache is not running, try starting it\e[0m"
     else
 	apache "restart"
     fi
@@ -305,34 +323,37 @@ done
 
 if [ $serviceStatusKey -eq 1 ] ; then
     statusVerify
+    exit 0
 
 elif [ $serviceStartKey -eq 1 -a $verboseKey -eq 0 ] ; then
-    start && exit 0
+    start
+    exit 0
 
 elif [ $serviceStartKey -eq 1 -a $verboseKey -eq 1 ] ; then
     start
-    apache_verbose
-    phpmyadmin_verbose
+    apacheVerbose
+    phpmyadminVerbose
     exit 0
 
 elif [ $serviceStopKey -eq 1 ] ; then
-    stop && exit 0
+    stop
+    exit 0
 
 elif [ $apacheStartKey -eq 1 -a $verboseKey -eq 1 ] ; then
-    apache_start
-    apache_verbose
+    apacheStart
+    apacheVerbose
     exit 0
     
 elif [ $apacheStartKey -eq 1 -a $verboseKey -eq 0 ] ; then
-    apache_start
+    apacheStart
     exit 0
 
 elif [ $apacheStopKey -eq 1 ] ; then
-    apache_stop
+    apacheStop
     exit 0
 
 elif [ $apacheRestartKey -eq 1 ] ; then
-    apache_restart
+    apacheRestart
     exit 0
 
 else
