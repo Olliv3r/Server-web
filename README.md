@@ -6,7 +6,7 @@ Gerenciador de serviços mysql e apache no termux
 source <(curl -fsSL https://raw.githubusercontent.com/Olliv3r/Server-web/main/setup)
 ```
 
-### Uso:
+#### Uso:
 ```
-server-web -h
+server-web --help
 ```
