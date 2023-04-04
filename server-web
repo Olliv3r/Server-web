@@ -187,12 +187,31 @@ mysql() {
 
 # Informaçôes de acesso ao host
 apacheVerbose() {
+    dir=$PREFIX/etc/apache2/extra
+    file="$(grep "#Redirect.*[-0-9]" $dir/httpd-vhosts.conf)"
+
     echo -e "\e[0m\e[34;1m[+] Default Access: \e[32;2mhttp://${host}:${ports[0]}\e[0m"
     sleep 0.1
-    echo -e "\e[0m\e[34;1m[+] Redirected Access: \e[32;2mhttps://${host}:${ports[1]}\e[0m"
+
+    if [ -n "$file" ] ; then
+	echo -e "\e[0m\e[33;1m[!] SSL: \e[32;2mDisabled\e[0m"
+
+    else
+        echo -e "\e[0m\e[34;1m[+] Redirected Access: \e[32;2mhttps://${host}:${ports[1]}\e[0m"
+
+    fi
+
 }
 phpmyadminVerbose() {
-    echo -e "\e[0m\e[34;1m[+] Phpmyadmin Access: \e[32;2mhttps://${host}:${ports[1]}/phpmyadmin\e[0m"
+    dir=$PREFIX/etc/apache2/extra
+    file="$(grep "#Redirect.*[-0-9]" $dir/httpd-vhosts.conf)"
+
+    if [ -n "$file" ] ; then
+	echo -e "\e[0m\e[33;1m[!] SSL: \e[32;2mDisabled\e[0m"
+
+    else
+        echo -e "\e[0m\e[34;1m[+] Phpmyadmin Access: \e[32;2mhttps://${host}:${ports[1]}/phpmyadmin\e[0m"
+    fi
 }
 
 # Inicia servidor web
