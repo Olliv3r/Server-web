@@ -82,7 +82,7 @@ verboseKey=0		# Chave desligada
 
 # Processos
 apache=$(ps -e | grep -o "httpd")
-mysqld_safe=$(ps -e | grep -o "mysqld_safe")
+#mysqld_safe=$(ps -e | grep -o "mysqld_safe")
 mariadb=$(ps -e | grep -o "mariadbd")
 
 reqList=("mariadb" "httpd")
@@ -142,7 +142,7 @@ version() {
 apache() {
     if [ -n "$1" ] ; then
 	if [ "$1" == "start" ] ; then
-	    printf "\r\e[0m\e[34;1m[*] Apache starging...\e[0m"
+	    printf "\r\e[0m\e[34;1m[*] Apache starting...\e[0m"
 	    apachectl -k "$1" > /dev/null 3>&2
 	    printf "\r\e[0m\e[34;1m[+] Apache starting...OK\n\e[0m"
 
@@ -216,15 +216,15 @@ phpmyadminVerbose() {
 
 # Inicia servidor web
 start() {
-    if [ -n "$apache" -a -n "$mysqld_safe" -a -n "$mariadb" ] ; then
+    if [ -n "$apache" -a -n "$mariadb" ] ; then
         statusVerify
 	exit 0
 
-    elif [ -n "$apache" -a -z "$mysqld_safe" -a -z "$mariadb" ] ; then
+    elif [ -n "$apache" -a -z "$mariadb" ] ; then
 	apache "restart"
 	mysql "start"
 
-    elif [ -z "$apache" -a -n "$mysqld_safe" -a -n "$mariadb" ] ; then
+    elif [ -z "$apache" -a -n "$mariadb" ] ; then
 	apache "start"
 	mysql "stop" > /dev/null 2>&1
 	mysql "start"
@@ -237,15 +237,15 @@ start() {
 
 # Encerra os serviços
 stop() {
-    if [ -n "$apache" -a -n "$mysqld_safe" -a -n "$mariadb" ] ; then
+    if [ -n "$apache" -a -n "$mariadb" ] ; then
 	apache "stop"
 	mysql "stop"
 
-    elif [ -n "$apache" -a -z "$mysqld_safe" -a -z "$mariadb" ] ; then
+    elif [ -n "$apache" -a -z "$mariadb" ] ; then
 	apache "stop"
 	echo -e "\e[0m\e[33;1m[!] MySQL is already stopped\e[0m"
 
-    elif [ -z "$apache" -a -n "$mysqld_safe" -a -n "$mariadb" ] ; then
+    elif [ -z "$apache" -a -n "$mariadb" ] ; then
         echo -e "\e[0m\e[33;1m[!] Apache is already stopped\e[0m"
 	mysql "stop"
 
@@ -256,15 +256,15 @@ stop() {
 
 # Verifica o status dos serviços Apache e MySQL
 statusVerify() {
-    if [ -n "$apache" -a -n "$mysqld_safe" -a -n "$mariadb" ] ; then
+    if [ -n "$apache" -a -n "$mariadb" ] ; then
 	echo -e "\e[0m\e[33;1m[+] Apache is running\e[0m"
 	echo -e "\e[0m\e[33;1m[+] MySQL is running\e[0m"
 
-    elif [ -n "$apache" -a -z "$mysqld_safe" -a -z "$mariadb" ] ; then
+    elif [ -n "$apache" -a -z "$mariadb" ] ; then
 	echo -e "\e[0m\e[34;1m[+] Apache is running\e[0m"
 	echo -e "\e[0m\e[33;1m[!] MySQL is not running\e[0m"
 
-    elif [ -z "$apache" -a -n "$mysqld_safe" -a -n "$mariadb" ] ; then
+    elif [ -z "$apache" -a -n "$mariadb" ] ; then
 	echo -e "\e[0m\e[33;1m[!] Apache is not running\e[0m"
 	echo -e "\e[0m\e[34;1m[+] MySQL is running\e[0m"
 
