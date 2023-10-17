@@ -5,33 +5,24 @@
 link="https://raw.githubusercontent.com/Olliv3r/Server-web/main/server-web"
 
 installForApt() {
-    if [ -z "$1" ] ; then
-	echo -e "\e[31;1m[!] Expecifique o pacote\e[0m"
-	exit 1
-    fi
-
     while [ ! -f $PREFIX/bin/$1 ] ; do
-	printf "\r\e[32mInstalando pacotes...\e[0m"
+	printf "\r\e[34;1m[*] Instalando pacotes...\e[0m"
 	sleep 2
 	apt update > /dev/null 2>&1
 	apt install $1 > /dev/null 2>&1
     done
-    printf "\r\e[32mInstalando pacotes...\e[32;1mOK\n\e[0m"
+    printf "\r\e[34;1m[+] Instalando pacotes...\e[32;1mOK\n\e[0m"
 }
 
-installForCurl() {
-    if [ -f $PREFIX/bin/server-web ] ; then
-	rm $PREFIX/bin/server-web
-    fi
-
+installForCurl() { 
     while [ ! -f $PREFIX/bin/server-web ] ; do
-	printf "\r\e[32mConfigurando...\e[0m"
+	printf "\r\e[34;1m[*] Instalando server-web...\e[0m"
 	sleep 2
 	curl -LO $link > /dev/null 2>&1
 	chmod +x server-web
 	cp server-web $PREFIX/bin
     done
-    printf "\r\e[32mConfigurando...\e[32;1mOK\n\e[0m"
+    printf "\r\e[34;1m[+] Instalando server-web...\e[32;1mOK\n\e[0m"
     sleep 2
 }
 
@@ -40,16 +31,18 @@ versionVerify() {
 
     if [ -f $PREFIX/bin/server-web ] ; then
 	currentVersion=$(cat $PREFIX/bin/server-web | grep "^# Versão" | tail -1 | cut -d : -f 1 | tr -d \# | tr -d "ãA-z ")
+
         if [ $currentVersion == $recentVersion ] ; then
-	    echo -e  "\e[33;1m[!] Versão mais recente será instalada, aguarde.\e[0m"
+	    echo -e  "\e[33;1m[!] Versão mais recente ja está instalada.\e[0m"
+	    exit
+        else
+	    echo -e  "\e[33;1m[*] instalando a versão mais recente, aguarde...\e[0m"
 	    installForCurl
 	fi
-	echo -e  "\e[33;1m[!] Versão mais recente será instalada, aguarde.\e[0m"
-	installForCurl
 
     elif [ ! -f $PREFIX/bin/server-web ] ; then
-	installForApt "curl"
-	installForCurl
+	echo -e  "\e[36;1m[*] instalando server-web, aguarde...\e[0m"
+	installForApt "curl" && installForCurl
 
     else
 	echo -e "\e[31;1m Erro ao encontrar o programa\e[0m"
