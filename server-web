@@ -50,6 +50,8 @@
 #     - Adicionada funçôes para iniciar, reiniciar e parar o servidor apache
 # v1.4 2023-02-03, Oliver Silva:
 #     - Adicionada suporte ao modo verbose
+# v1.5 2023-17-10, Oliver Silva
+#     - Verbose melhorado e blocos refatorados
 #
 #
 # Licença: MIT License
@@ -64,7 +66,7 @@
 # Versão 1.3: Adicionada suporte as opçôes --apache-start
 #	      apache-stop e apache-restart
 # Versão 1.4: Adicionada suporte a opção --verbose
-#
+# Versão 1.5: Blocos de codigos refatorados
 
 # Chaves de ativação das funcionalidades
 
@@ -199,7 +201,7 @@ phpmyadminVerbose() {
   file="$(grep "#Redirect.*[-0-9]" $dir/httpd-vhosts.conf)"
 
   if [ -n "$file" ] ; then
-    echo -e "${c[0]}[${c[2]}+${c[0]}] Url padrão PhpMyAdmin: ${c[2]}http://${host}:${ports[0]}${c[0]}"
+    echo -e "${c[0]}[${c[2]}+${c[0]}] Url padrão PhpMyAdmin: ${c[2]}http://${host}:${ports[0]}/phpmyadmin${c[0]}"
   else
     echo -e "${c[0]}[${c[2]}+${c[0]}] Url SSL PhpMyAdmin: ${c[2]}https://${host}:${ports[1]}/phpmyadmin${c[0]}"
   fi
