@@ -20,7 +20,9 @@ installForApt() {
 }
 
 installForCurl() {
-    [ -f $PREFIX/bin/server-web ] && rm $PREFIX/bin/server-web
+    if [ -f $PREFIX/bin/server-web ] ; then
+	rm $PREFIX/bin/server-web
+    fi
 
     while [ ! -f $PREFIX/bin/server-web ] ; do
 	printf "\r\e[32mConfigurando...\e[0m"
@@ -42,6 +44,8 @@ versionVerify() {
 	    echo -e  "\e[33;1m[!] Versão mais recente será instalada, aguarde.\e[0m"
 	    installForCurl
 	fi
+	echo -e  "\e[33;1m[!] Versão mais recente será instalada, aguarde.\e[0m"
+	installForCurl
 
     elif [ ! -f $PREFIX/bin/server-web ] ; then
 	installForApt "curl"
