@@ -40,16 +40,17 @@ chmod_move() {
   [ ! -f "files/$1" ] && echo -e "\e[0m\e[1;33mArquivo $1 não existe\e[0m" && exit 1
 
   chmod +x files/"$1"
+  cp files/$1 .
   mv files/$1 $PREFIX/bin
 }
 
 versionVerify() {
-  recentVersion=$(curl -sS $link | grep "^# Versão" | tail -1 | cut -d : -f 1 | tr -d \# | tr -d "ãA-z ")
+  recentVersion=$(curl -sS "$link" | grep "^# Versão" | tail -1 | cut -d : -f 1 | tr -d \# | tr -d "ãA-z ")
 
   if [ -f $PREFIX/bin/server-web ] ; then
 	  currentVersion=$(cat $PREFIX/bin/server-web | grep "^# Versão" | tail -1 | cut -d : -f 1 | tr -d \# | tr -d "ãA-z ")
 
-    if [ $currentVersion == $recentVersion ] ; then
+    if [ "$currentVersion" == "$recentVersion" ] ; then
 	    echo -e "\e[0m\e[1;33mVersão mais recente do server-web ja está instalada.\e[0m"
 	    exit
     else
