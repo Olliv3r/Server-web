@@ -190,15 +190,11 @@ mysql() {
 
 # Abre o console do mariadb:
 consoleMariadb() {
-  mysql "start"
-  sleep 1
-  echo -e "${c[0]}[${c[2]}+${c[0]}] Abrindo o console MariaDB...OK"
-  sleep 1
-  echo
   mariadb --user=root --password=toor
-  mysql "stop"
-  sleep 0.2
-  echo -e "${c[0]}[${c[2]}+${c[0]}] Fechando o console MariaDB...OK"
+  
+  [ $? -ne 0 ] && {
+    echo -e "${c[1]}MariaDB não está rodando${c[0]}" && exit 1
+  }
 }
 
 # Informaçôes de acesso ao host:
