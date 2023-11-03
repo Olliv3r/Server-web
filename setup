@@ -4,55 +4,66 @@
 
 link="https://raw.githubusercontent.com/Olliv3r/Server-web/main/server-web"
 
+# Instalação via apt
 installForApt() {
-    while [ ! -f $PREFIX/bin/$1 ] ; do
-	printf "\r\e[34;1m[*] Instalando pacotes...\e[0m"
-	sleep 2
+  [ -z "$1" ] && echo -e "\e[0m\e[1;33mPrecisa um pacote para baixá-lo\e[0m" && exit 1
+  
+  printf "\r\e[34;1m[*] Instalando pacotes...\e[0m"
+	sleep 1
 	apt update > /dev/null 2>&1
 	apt install $1 > /dev/null 2>&1
-    done
-    printf "\r\e[34;1m[+] Instalando pacotes...\e[32;1mOK\n\e[0m"
+  printf "\r\e[34;1m[+] Instalando pacotes...\e[32;1mOK\n\e[0m"
 }
 
-installForCurl() { 
-    while [ ! -f $PREFIX/bin/server-web ] ; do
-	printf "\r\e[34;1m[*] Instalando server-web...\e[0m"
-	sleep 2
-	curl -LO $link > /dev/null 2>&1
-	chmod +x server-web
-	cp server-web $PREFIX/bin
-    done
-    printf "\r\e[34;1m[+] Instalando server-web...\e[32;1mOK\n\e[0m"
-    sleep 2
+# Instalação via curl
+installForCurl() {
+  [ ! -d files ] && mkdir files
+  [ -z "$1" ] && echo -e "\e[0m\e[1;33mPrecisa do link para baixar o arquivo\e[0m" && exit 1
+
+  name_file=$(echo "$link" | cut -d / -f 7)
+  
+	printf "\r\e[34;1m[*] Instalando $name_file...\e[0m"
+	curl -L "$1" -o files/server-web --silent
+	
+	if [ -f files/$name_file ] ; then
+	  printf "\r\e[34;1m[+] Instalando $name_file...\e[32;1mOK\n\e[0m"
+    sleep 1
+    chmod_move "$name_file"
+  else
+    echo -e "\e[0m\e[1;33mFalha ao baixar o arquivo\e[0m" && exit 1
+  fi
+}
+
+# Dar pemissôes a move um arquivo:
+chmod_move() {
+  [ -z "$1" ] && echo -e "\e[0m\e[1;33mPrecisa de um arquivo para dar as permissôes\e[0m" && exit 1
+  [ ! -f "files/$1" ] && echo -e "\e[0m\e[1;33mArquivo $1 não existe\e[0m" && exit 1
+
+  chmod +x files/"$1"
+  mv files/$1 $PREFIX/bin
 }
 
 versionVerify() {
-    recentVersion=$(curl -sS $link | grep "^# Versão" | tail -1 | cut -d : -f 1 | tr -d \# | tr -d "ãA-z ")
+  recentVersion=$(curl -sS $link | grep "^# Versão" | tail -1 | cut -d : -f 1 | tr -d \# | tr -d "ãA-z ")
 
-    if [ -f $PREFIX/bin/server-web ] ; then
-	currentVersion=$(cat $PREFIX/bin/server-web | grep "^# Versão" | tail -1 | cut -d : -f 1 | tr -d \# | tr -d "ãA-z ")
+  if [ -f $PREFIX/bin/server-web ] ; then
+	  currentVersion=$(cat $PREFIX/bin/server-web | grep "^# Versão" | tail -1 | cut -d : -f 1 | tr -d \# | tr -d "ãA-z ")
 
-        if [ $currentVersion == $recentVersion ] ; then
-	    echo -e  "\e[33;1m[!] Versão mais recente ja está instalada.\e[0m"
+    if [ $currentVersion == $recentVersion ] ; then
+	    echo -e "\e[0m\e[1;33mVersão mais recente do server-web ja está instalada.\e[0m"
 	    exit
-        else
-	    echo -e  "\e[33;1m[*] instalando a versão mais recente, aguarde...\e[0m"
-	    installForCurl
-	fi
-
-    elif [ ! -f $PREFIX/bin/server-web ] ; then
-	echo -e  "\e[36;1m[*] instalando server-web, aguarde...\e[0m"
-	installForApt "curl" && installForCurl
-
     else
-	echo -e "\e[31;1m Erro ao encontrar o programa\e[0m"
-	exit 1
-    fi
+	    installForCurl "$link"
+	  fi
+
+  elif [ ! -f $PREFIX/bin/server-web ] ; then
+	  installForApt "curl"
+	  installForCurl "$link"
+  else
+	  echo -e "\e[31;1m Erro ao encontrar o programa\e[0m"
+	  exit 1
+  fi
 
 }
 
-setup() {
-    versionVerify
-}
-
-setup
+versionVerify
