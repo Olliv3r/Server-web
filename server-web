@@ -4,12 +4,12 @@
 # Obs.: Usa o apachectl e httpd como base para o gerenciamento
 #       dos serviços
 #
-# Site      : http://programadorboard.epizy.com/autor
-# Autor     : Oliver Silva <programadorboard@gmail.com>
-# Munutençâo: Oliver Silva <programadorboard@gmail.com>
+# Site      : https://tiooliver.rf.gd
+# Autor     : Oliver Silva <oliveobom100@gmail.com>
+# Munutençâo: Oliver Silva <oliveobom100@gmail.com>
 #
 # ----------------------------------------------------
-# Este programa recebe como parâmetro uma opção e ativa
+# Este programa recebe como argumento opçôes que ativa
 # uma ação: mostrar status, ativar ou desativar serviço
 # e retornando o resultado na saída padrão (STDOUT).
 #
@@ -18,19 +18,19 @@
 #   $ ./server-web --version
 #   server-web versão 1.4
 #
-#   $ ./server-web --start
+#   $ ./server-web -start
 #   [+] Apache iniciando...OK
 #   [+] MariaDB iniciando...OK
 #
-#   $ ./server-web --status
+#   $ ./server-web -status
 #   [+] Apache está rodando
 #   [+] MariaDB está rodando
 #
-#   $ ./server-web --stop
+#   $ ./server-web -stop
 #   [+] Apache encerrando...OK
 #   [+] MariaDB encerrando...OK
 #
-#   $ ./server-web --start --verbose
+#   $ ./server-web -start -verbose
 #   [+] Apache iniciando...OK
 #   [+] Apache iniciando...OK
 #   [+] Url padrão: http://localhost:8080
@@ -52,7 +52,8 @@
 #     - Adicionada suporte ao modo verbose
 # v1.5 2023-17-10, Oliver Silva
 #     - Verbose melhorado e blocos refatorados
-#
+# v1.6 2023-3-11, Oliver Silva:
+#     - Adicionada a opção -console, substituição dos comandos deprecados do mariadb e melhorias no código
 #
 # Licença: MIT License
 #
@@ -67,78 +68,84 @@
 #	      apache-stop e apache-restart
 # Versão 1.4: Adicionada suporte a opção --verbose
 # Versão 1.5: Blocos de codigos refatorados
+# Versão 1.6: Melhorias no código
 
-# Chaves de ativação das funcionalidades
+### VARIÁVEIS ### 
 
+# Chaves de cada funcionalidade:
 serviceStatusKey=0	# Chave desligada
 serviceStartKey=0	  # Chave desligada
 serviceStopKey=0	  # Chave desligada
+consoleMariadbKey=0 # Chave desligada
 apacheStartKey=0  	# Chave desligada
 apacheStopKey=0		  # Chave desligada
 apacheRestartKey=0	# Chave desligada
 verboseKey=0	    	# Chave desligada
 
-# Cores
-c=('\e[0m' '\e[1;31m' '\e[1;32m' '\e[1;33m' '\e[1;34m')
+# Cores normais e darks:
+c=('\e[0m' '\e[1;31m' '\e[1;32m' '\e[1;33m' '\e[1;34m'  '\e[1;35m' '\e[1;36m'  '\e[1;37m' '\e[1;38m')
+cd=('\e[0;2m' '\e[2;31m' '\e[2;32m' '\e[2;33m' '\e[2;34m'  '\e[2;35m' '\e[2;36m'  '\e[2;37m' '\e[2;38m')
 
-# Processos
+# Processos:
 apache=$(ps -e | grep -o "httpd")
 mariadb=$(ps -e | grep -o "mariadbd")
 
-# Requisitos
+# Requisitos:
 reqList=("mariadb" "httpd")
 
-# Host e porta
+# Host e porta:
 host="localhost"
 ports=("8080" "8443")
 
-# Ajuda
+### FUNÇÔES ###
+
+# Ajuda:
 helper() {
     echo -e "Uso: $(basename "$0") [OPÇÔES]
 Opçôes:
     -h, --help\t\tMostra esta tela de ajuda e sai
     -v, --version\tMostra a versão mais recente do programa
-    --status\t\tVerifica status dos serviços
-    --start\t\tInicia serviços Apache e MariaDB
-    --stop\t\tEncerra serviços Apache e MariaDB
-    --apache-start\tInicia o servidor Apache
-    --apache-stop\tEncerra o servidor Apache
-    --apache-restart\tReinicia o servidor Apache
-    -V, --verbose\tMostra informaçôes para acessar os serviços"
+    -status\t\tVerifica status dos serviços
+    -start\t\tInicia serviços Apache e MariaDB
+    -stop\t\tEncerra serviços Apache e MariaDB
+    -console\t\tAbre o console do MariaDB
+    -ap-start\t\tInicia o servidor Apache
+    -ap-stop\t\tEncerra o servidor Apache
+    -ap-restart\t\tReinicia o servidor Apache
+    -verbose\tMostra informaçôes para acessar os serviços"
     exit 0
 }
 
-# Banner
+# Banner:
 banner() {
-	echo -e "${c[4]}
+	echo -e "${c[0]}$(version | tr A-Z a-z)\n\nGithub\t: https://github.com/Olliv3r\nSite\t: https://tiooliver.rf.gd\n${cd[4]}\n
 █▀▀ █▀▀ █▀▀█ ▀█░█▀ █▀▀ █▀▀█ 　 █░░░█ █▀▀ █▀▀▄ 
 ▀▀█ █▀▀ █▄▄▀ ░█▄█░ █▀▀ █▄▄▀ 　 █▄█▄█ █▀▀ █▀▀▄ 
-▀▀▀ ▀▀▀ ▀░▀▀ ░░▀░░ ▀▀▀ ▀░▀▀ 　 ░▀░▀░ ▀▀▀ ▀▀▀░ 
-\n${c[4]}$(version | tr A-Z a-z)${c[0]}"
+▀▀▀ ▀▀▀ ▀░▀▀ ░░▀░░ ▀▀▀ ▀░▀▀ 　 ░▀░▀░ ▀▀▀ ▀▀▀░ "
 }
 
-# Checa um pacote no /bin
+# Checa um pacote no /bin:
 packageCheck() {
   if [ ! -f $PREFIX/bin/${1} ] ; then
     echo -e "${c[0]}[${3}!${c[0]}] $1 não está instalado${c[0]}"
   fi
 }
 
-# Checa pacotes
+# Checa pacotes:
 reqCheck() {
   for package in ${reqList[*]} ; do
     packageCheck $package
   done
 }
 
-# Extrai a versão diretamente do cabeçalho
+# Extrai a versão diretamente do cabeçalho:
 version() {
   echo -n "$(basename "$0")"
   grep "^# Versão" "$0" | tail -1 | cut -d : -f 1 | tr -d \# | tr A-Z a-z
   exit 0
 }
 
-# Função para iniciar, reiniciar e parar o serviço apache
+# Função para iniciar, reiniciar e parar o serviço apache:
 apache() {
   if [ -n "$1" ] ; then
     if [ "$1" == "start" ] ; then
@@ -162,12 +169,12 @@ apache() {
   fi
 }
 
-# Função para encerrar o serviço MariaDB
+# Função para encerrar o serviço MariaDB:
 mysql() {
   if [ -n "$1" ] ; then
     if [ "$1" == "start" ] ; then
       printf "\r${c[0]}[${c[2]}*${c[0]}] MariaDB iniciando..."
-      mysqld_safe -u root > /dev/null 3>&2 &
+      mariadbd-safe -u root > /dev/null 3>&2 &
       printf "\r${c[0]}[${c[2]}+${c[0]}] MariaDB iniciando...OK\n"
 
     else
@@ -181,7 +188,20 @@ mysql() {
   fi
 }
 
-# Informaçôes de acesso ao host
+# Abre o console do mariadb:
+consoleMariadb() {
+  mysql "start"
+  sleep 1
+  echo -e "${c[0]}[${c[2]}+${c[0]}] Abrindo o console MariaDB...OK"
+  sleep 1
+  echo
+  mariadb --user=root --password=toor
+  mysql "stop"
+  sleep 0.2
+  echo -e "${c[0]}[${c[2]}+${c[0]}] Fechando o console MariaDB...OK"
+}
+
+# Informaçôes de acesso ao host:
 apacheVerbose() {
   dir=$PREFIX/etc/apache2/extra
   file="$(grep "#Redirect.*[-0-9]" $dir/httpd-vhosts.conf)"
@@ -195,6 +215,7 @@ apacheVerbose() {
   fi
 }
 
+# Informaçôes de acesso ao painel do PhpMyAdmin:
 phpmyadminVerbose() {
   dir=$PREFIX/etc/apache2/extra
   file="$(grep "#Redirect.*[-0-9]" $dir/httpd-vhosts.conf)"
@@ -206,7 +227,7 @@ phpmyadminVerbose() {
   fi
 }
 
-# Inicia servidor web
+# Inicia servidor web:
 start() {
   if [ -n "$apache" -a -n "$mariadb" ] ; then
     echo -e "${c[0]}[${c[3]}!${c[0]}] Apache ja foi iniciado${c[0]}"
@@ -228,7 +249,7 @@ start() {
   fi
 }
 
-# Encerra os serviços Apache e MariaDB
+# Encerra os serviços Apache e MariaDB:
 stop() {
   if [ -n "$apache" -a -n "$mariadb" ] ; then
     apache "stop"
@@ -248,7 +269,7 @@ stop() {
   fi
 }
 
-# Verifica o status dos serviços Apache e MariaDB
+# Verifica o status dos serviços Apache e MariaDB:
 statusVerify() {
   if [ -n "$apache" -a -n "$mariadb" ] ; then
     echo -e "${c[0]}[${c[2]}+${c[0]}] Apache está rodando${c[0]}"
@@ -268,7 +289,7 @@ statusVerify() {
   fi
 }
 
-# Inicia o servidor apache
+# Inicia o servidor apache:
 apacheStart() {
   if [ -n "$apache" ] ; then
     echo -e "${c[0]}[${c[3]}!${c[0]}] Apache ja foi iniciado${c[0]}"
@@ -278,7 +299,7 @@ apacheStart() {
   fi
 }
 
-# Encerra o servidor apache
+# Encerra o servidor apache:
 apacheStop() {
   if [ -z "$apache" ] ; then
     echo -e "${c[0]}[${c[3]}!${c[0]}] Apache ja foi encerrado${c[0]}"
@@ -287,7 +308,7 @@ apacheStop() {
   fi
 }
 
-# Reinicia o servidor apache
+# Reinicia o servidor apache:
 apacheRestart() {
   if [ -z "$apache" ] ; then
     echo -e "${c[0]}[${c[3]}!${c[0]}] Apache não está rodando, tente iniciá-lo primeiro${c[0]}"
@@ -296,57 +317,45 @@ apacheRestart() {
   fi
 }
 
-### TRATAMENTO DAS OPÇÔES
-
-test -n "$1" && reqCheck
-test -z "$1" && banner && echo -e "\n\e[0m[\e[33m!\e[0m] Parâmetro necessário, tente --help\e[0m" && exit 1
+### EXECUÇÃO ###
 
 # Tratando opçôes:
-while test -n "$1" ; do
-  case "$1" in
-    -h|--help)
-      helper;;
-    -v|--version)
-      version;;
-    --status)
-      serviceStatusKey=1;;
-    --start)
-      serviceStartKey=1;;
-    --stop)
-      serviceStopKey=1;;
-    --apache-start)
-      apacheStartKey=1;;
-    --apache-stop)
-      apacheStopKey=1;;
-    --apache-restart)
-      apacheRestartKey=1;;
-    -V|--verbose)
-      verboseKey=1;;
-    *)
-      echo -e "\e[0m[\e[33m!\e[0m] Opção inválida: tente $(basename "$0") --help"
-      exit 1;;
-  esac
-  shift
-done
+if [ ${#@} -ne 0 ] ; then
 
-## Verificando chaves se estão ativas:
-if [ $serviceStatusKey -eq 1 ] ; then
-  statusVerify && exit 0
-elif [ $serviceStartKey -eq 1 -a $verboseKey -eq 0 ] ; then
-  start && exit 0
-elif [ $serviceStartKey -eq 1 -a $verboseKey -eq 1 ] ; then
-  start && apacheVerbose && phpmyadminVerbose && exit 0
-elif [ $serviceStopKey -eq 1 ] ; then
-  stop && exit 0
-elif [ $apacheStartKey -eq 1 -a $verboseKey -eq 1 ] ; then
-  apacheStart && apacheVerbose && exit 0
-elif [ $apacheStartKey -eq 1 -a $verboseKey -eq 0 ] ; then
-  apacheStart && exit 0
-elif [ $apacheStopKey -eq 1 ] ; then
-  apacheStop && exit 0
-elif [ $apacheRestartKey -eq 1 ] ; then
-  apacheRestart && exit 0
+ [ ${#@} -gt 2 ] && {
+    echo -e "${c[1]}Ultrapassou o máximo de argumentos necessário!\n${c[3]}Tente o exemplo: ${c[0]}$(basename $0) -start -verbose"
+    exit 1
+  }
+  
+  while test -n "$1" ; do
+    case "$1" in
+      -h|--help) helper               ;;
+      -v|-version) version            ;;
+      -status) serviceStatusKey=1     ;;
+      -start) serviceStartKey=1       ;;
+      -stop)  serviceStopKey=1        ;;
+      -console) consoleMariadbKey=1   ;;
+      -ap-start) apacheStartKey=1     ;;
+      -ap-stop) apacheStopKey=1       ;;
+      -ap-restart) apacheRestartKey=1 ;;
+      -verbose) verboseKey=1          ;;
+      *) echo -e "${c[1]}Opção inválida: tente $(basename "$0") --help${c[0]}" && exit 1;;
+    esac
+    shift
+  done
 else
-  echo -e "[!] Não é possível processar o comando, tente -h"
+  banner
+  echo -e "\n${c[0]}Consulte mais informaçôes com as opçôes -h,--help"
   exit 1
 fi
+
+# Verificando se as chaves estão ativas e disparar a funcionalidade relacionada a chave:
+[ $serviceStatusKey -eq 1 ] && statusVerify && exit 0
+[ $serviceStartKey -eq 1 -a $verboseKey -eq 0 ] && start && exit 0
+[ $serviceStartKey -eq 1 -a $verboseKey -eq 1 ] && start && apacheVerbose && exit 0
+[ $serviceStopKey -eq 1 ] && stop && exit 0
+[ $consoleMariadbKey -eq 1 ] && consoleMariadb
+[ $apacheStartKey -eq 1 -a $verboseKey -eq 1 ] && apacheStart && apacheVerbose && exit 0
+[ $apacheStartKey -eq 1 -a $verboseKey -eq 0 ] && apacheStart && exit 0
+[ $apacheStopKey -eq 1 ] && apacheStop && exit 0
+[ $apacheRestartKey -eq 1 ] && apacheRestart && exit 0
