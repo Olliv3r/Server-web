@@ -40,7 +40,6 @@ chmod_move() {
   [ ! -f "files/$1" ] && echo -e "\e[0m\e[1;33mArquivo $1 não existe\e[0m" && exit 1
 
   chmod +x files/"$1"
-  cp files/$1 .
   mv files/$1 $PREFIX/bin
 }
 
