@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# setup - Instala e atualiza o server-web
+# setup - Instala e tualiza o server-web
 # 
 
 link="https://raw.githubusercontent.com/Olliv3r/Server-web/main/server-web"
@@ -9,9 +9,9 @@ installForApt() {
   [ -z "$1" ] && echo -e "\e[0m\e[1;33mPrecisa um pacote para baixá-lo\e[0m" && exit 1
   
   printf "\r\e[34;1m[*] Instalando pacotes...\e[0m"
-	sleep 1
-	apt update > /dev/null 2>&1
-	apt install $1 > /dev/null 2>&1
+  sleep 1
+  apt update > /dev/null 2>&1
+  apt install $1 > /dev/null 2>&1
   printf "\r\e[34;1m[+] Instalando pacotes...\e[32;1mOK\n\e[0m"
 }
 
@@ -22,11 +22,11 @@ installForCurl() {
 
   name_file=$(echo "$link" | cut -d / -f 7)
   
-	printf "\r\e[34;1m[*] Instalando $name_file...\e[0m"
-	curl -L "$1" -o files/server-web --silent
+  printf "\r\e[34;1m[*] Instalando $name_file...\e[0m"
+  curl -L "$1" -o files/server-web --silent
 	
-	if [ -f files/$name_file ] ; then
-	  printf "\r\e[34;1m[+] Instalando $name_file...\e[32;1mOK\n\e[0m"
+  if [ -f files/$name_file ] ; then
+    printf "\r\e[34;1m[+] Instalando $name_file...\e[32;1mOK\n\e[0m"
     sleep 1
     chmod_move "$name_file"
   else
@@ -47,23 +47,22 @@ versionVerify() {
   recentVersion=$(curl -sS "$link" | grep "^# Versão" | tail -1 | cut -d : -f 1 | tr -d \# | tr -d "ãA-z ")
 
   if [ -f $PREFIX/bin/server-web ] ; then
-	  currentVersion=$(cat $PREFIX/bin/server-web | grep "^# Versão" | tail -1 | cut -d : -f 1 | tr -d \# | tr -d "ãA-z ")
+    currentVersion=$(cat $PREFIX/bin/server-web | grep "^# Versão" | tail -1 | cut -d : -f 1 | tr -d \# | tr -d "ãA-z ")
 
     if [ "$currentVersion" == "$recentVersion" ] ; then
-	    echo -e "\e[0m\e[1;33mVersão mais recente do server-web ja está instalada.\e[0m"
-	    exit
+      echo -e "\e[0m\e[1;33mVersão mais recente do server-web ja está instalada.\e[0m"
+      exit
     else
-	    installForCurl "$link"
-	  fi
+      installForCurl "$link"
+    fi
 
   elif [ ! -f $PREFIX/bin/server-web ] ; then
-	  installForApt "curl"
-	  installForCurl "$link"
+    installForApt "curl"
+    installForCurl "$link"
   else
-	  echo -e "\e[31;1m Erro ao encontrar o programa\e[0m"
-	  exit 1
+    echo -e "\e[31;1m Erro ao encontrar o programa\e[0m"
+    exit 1
   fi
-
 }
 
 versionVerify

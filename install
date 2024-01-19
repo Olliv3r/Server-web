@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+#
+# Instala o gerenciador server-web
+#
+# Por oliver, 2024
+#
+#
+
+install() {
+  apt update && apt upgrade -y
+  apt install git -y
+  git clone https://github.com/Olliv3r/Server-Web
+  cd Server-Web
+  bash ./setup
+}
