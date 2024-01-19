@@ -15,9 +15,9 @@ install() {
 
   [ -d $HOME/Server-Web ] && rm -rf $HOME/Server-Web
 
-  echo -e "\r\e[2;32mClonando repositório server-web...\e[0m"
+  printf "\e[2;32mClonando repositório server-web...\e[0m"
   git clone https://github.com/Olliv3r/Server-Web $HOME/Server-Web > /dev/null 2>&1
-  echo -e "\r\e[2;32mClonando repositório server-web... done\e[0m"
+  printf "\e[2;32mClonando repositório server-web... done\e[0m"
   bash $HOME/Server-Web/setup
 }
 
