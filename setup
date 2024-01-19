@@ -6,8 +6,7 @@ link="https://raw.githubusercontent.com/Olliv3r/Server-web/main/server-web"
 
 # Instalação via apt
 installForApt() {
-  [ -z "$1" ] && echo -e "\e[0m\e[1;33mPrecisa um pacote para baixá-lo\e[0m" && exit 1
-  
+  [ -z "$1" ] && echo -e "\e[0m\e[1;33mPrecisa um pacote para baixá-lo\e[0m" && exit 1 
   printf "\r\e[34;1m[*] Instalando pacotes...\e[0m"
   sleep 1
   apt update > /dev/null 2>&1
@@ -50,7 +49,7 @@ versionVerify() {
     currentVersion=$(cat $PREFIX/bin/server-web | grep "^# Versão" | tail -1 | cut -d : -f 1 | tr -d \# | tr -d "ãA-z ")
 
     if [ "$currentVersion" == "$recentVersion" ] ; then
-      echo -e "\e[0m\e[1;33mVersão mais recente do server-web ja está instalada.\e[0m"
+      echo -e "\e[0m[!]\e[1;33m A versão mais recente do server-web ja está instalada!\e[0m"
       exit
     else
       installForCurl "$link"
