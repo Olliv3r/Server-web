@@ -7,9 +7,16 @@
 #
 
 install() {
+  echo -e "\e[2;32mInstalando pacotes...\e[0m"
   apt update && apt upgrade -y
   apt install git -y
-  git clone https://github.com/Olliv3r/Server-Web
-  cd Server-Web
+  echo -e "\e[2;32mInstalando pacotes... Done\e[0m"
+
+  [ -d $HOME/Server-Web ] && rm -rf $HOME/Server-Web
+
+  git clone https://github.com/Olliv3r/Server-Web $HOME/Server-Web > /dev/null 2>&1
+  cd $HOME/Server-Web
   bash ./setup
 }
+
+install
