@@ -1,8 +1,7 @@
 #!/usr/bin/env bash
 #
 # server-web - Gerencia servidor web no linux termux
-# Obs.: Usa o apachectl e httpd como base para o gerenciamento
-#       dos serviços
+# Obs.: Usa o mariadbd-safe, apachectl e httpd como base para o gerenciamento dos serviços.
 #
 # Site      : https://tiooliver.rf.gd
 # Autor     : Oliver Silva <oliveobom100@gmail.com>
@@ -10,7 +9,7 @@
 #
 # ----------------------------------------------------
 # Este programa recebe como argumento opçôes que ativa
-# uma ação: mostrar status, ativar ou desativar serviço
+# uma ação: mostrar status, ativar ou desativar serviço(s)
 # e retornando o resultado na saída padrão (STDOUT).
 #
 # Exemplo:
@@ -18,22 +17,21 @@
 #   $ ./server-web --version
 #   server-web versão 1.4
 #
-#   $ ./server-web -start
+#   $ ./server-web start
 #   [+] Apache iniciando...OK
 #   [+] MariaDB iniciando...OK
 #
-#   $ ./server-web -status
+#   $ ./server-web status
 #   [+] Apache está rodando
 #   [+] MariaDB está rodando
 #
-#   $ ./server-web -stop
+#   $ ./server-web stop
 #   [+] Apache encerrando...OK
 #   [+] MariaDB encerrando...OK
 #
-#   $ ./server-web -start -verbose
+#   $ ./server-web start -V
 #   [+] Apache iniciando...OK
 #   [+] Apache iniciando...OK
-#   [+] Url padrão: http://localhost:8080
 #   [+] Url SSL: https://localhost:8443
 #   [+] Url phpmyadmin: https://localhost:8443/phpmyadmin
 #
@@ -44,16 +42,18 @@
 #     - Versão inicial iniciando ou encerrando servidor web
 # v1.1 2023-01-05, Oliver Silva:
 #     - Adicionada verificação de status de serviços ativos ou inativos
-# v1.2 2022-02-02, Oliver Silva:
+# v1.2 2023-02-02, Oliver Silva:
 #     - Adicionada verificação de requisitos
-# v1.3 2023-02-01, Oliver Silva:
+# v1.3 2023-02-04, Oliver Silva:
 #     - Adicionada funçôes para iniciar, reiniciar e parar o servidor apache
-# v1.4 2023-02-03, Oliver Silva:
+# v1.4 2023-02-05, Oliver Silva:
 #     - Adicionada suporte ao modo verbose
-# v1.5 2023-17-10, Oliver Silva
+# v1.5 2023-03-17, Oliver Silva
 #     - Verbose melhorado e blocos refatorados
-# v1.6 2023-3-11, Oliver Silva:
+# v1.6 2023-04-11, Oliver Silva:
 #     - Adicionada a opção -console, substituição dos comandos deprecados do mariadb e melhorias no código
+# v1.7 2024-01-18, Oliver Silva
+#     - Adicionada as opçôes my-start e my-stop para gerenciar o mariadb em expecifico
 #
 # Licença: MIT License
 #
@@ -69,6 +69,7 @@
 # Versão 1.4: Adicionada suporte a opção --verbose
 # Versão 1.5: Blocos de codigos refatorados
 # Versão 1.6: Melhorias no código
+# Versão 1.7: Adicionada as opçôes my-start my-stop e renomeação das opções antigas
 
 ### VARIÁVEIS ### 
 
@@ -105,14 +106,16 @@ helper() {
 Opçôes:
     -h, --help\t\tMostra esta tela de ajuda e sai
     -v, --version\tMostra a versão mais recente do programa
-    -status\t\tVerifica status dos serviços
-    -start\t\tInicia serviços Apache e MariaDB
-    -stop\t\tEncerra serviços Apache e MariaDB
-    -console\t\tAbre o console do MariaDB
-    -ap-start\t\tInicia o servidor Apache
-    -ap-stop\t\tEncerra o servidor Apache
-    -ap-restart\t\tReinicia o servidor Apache
-    -verbose\tMostra informaçôes para acessar os serviços"
+    status\t\tVerifica status dos serviços
+    start\t\tInicia serviços Apache e MariaDB
+    stop\t\tEncerra serviços Apache e MariaDB
+    console\t\tAbre o console do MariaDB
+    ap-start\t\tInicia o servidor Apache
+    ap-stop\t\tEncerra o servidor Apache
+    ap-restart\t\tReinicia o servidor Apache
+    my-start\t\tInicia o serviço MariaDB
+    my-stop\t\tEncerra o serviço MariaDB
+    -V, --verbose\tMostra informaçôes para acessar os serviços"
     exit 0
 }
 
@@ -206,19 +209,10 @@ apacheVerbose() {
 
   if [ -n "$file" ] ; then
     echo -e "${c[0]}[${c[2]}+${c[0]}] Url padrão: ${c[2]}http://${host}:${ports[0]}${c[0]}"
+    echo -e "${c[0]}[${c[2]}+${c[0]}] Url padrão PhpMyAdmin: ${c[2]}http://${host}:${ports[0]}/phpmyadmin${c[0]}"
+
   else
     echo -e "${c[0]}[${c[2]}+${c[0]}] Url SSL: ${c[2]}https://${host}:${ports[1]}${c[0]}"
-  fi
-}
-
-# Informaçôes de acesso ao painel do PhpMyAdmin:
-phpmyadminVerbose() {
-  dir=$PREFIX/etc/apache2/extra
-  file="$(grep "#Redirect.*[-0-9]" $dir/httpd-vhosts.conf)"
-
-  if [ -n "$file" ] ; then
-    echo -e "${c[0]}[${c[2]}+${c[0]}] Url padrão PhpMyAdmin: ${c[2]}http://${host}:${ports[0]}/phpmyadmin${c[0]}"
-  else
     echo -e "${c[0]}[${c[2]}+${c[0]}] Url SSL PhpMyAdmin: ${c[2]}https://${host}:${ports[1]}/phpmyadmin${c[0]}"
   fi
 }
@@ -313,6 +307,16 @@ apacheRestart() {
   fi
 }
 
+mariaDBStart() {
+  mysql "start"
+  sleep 1
+}
+
+mariaDBStop() {
+  mysql "stop"
+  sleep 1
+}
+
 ### EXECUÇÃO ###
 
 # Tratando opçôes:
@@ -325,17 +329,20 @@ if [ ${#@} -ne 0 ] ; then
   
   while test -n "$1" ; do
     case "$1" in
-      -h|--help) helper               ;;
-      -v|-version) version            ;;
-      -status) serviceStatusKey=1     ;;
-      -start) serviceStartKey=1       ;;
-      -stop)  serviceStopKey=1        ;;
-      -console) consoleMariadbKey=1   ;;
-      -ap-start) apacheStartKey=1     ;;
-      -ap-stop) apacheStopKey=1       ;;
-      -ap-restart) apacheRestartKey=1 ;;
-      -verbose) verboseKey=1          ;;
-      *) echo -e "${c[1]}Opção inválida: tente $(basename "$0") --help${c[0]}" && exit 1;;
+      -h|--help) helper              ;;
+      -v|--version) version          ;;
+      status) serviceStatusKey=1     ;;
+      start) serviceStartKey=1       ;;
+      stop)  serviceStopKey=1        ;;
+      console) consoleMariadbKey=1   ;;
+      ap-start) apacheStartKey=1     ;;
+      ap-stop) apacheStopKey=1       ;;
+      ap-restart) apacheRestartKey=1 ;;
+      my-start) mariaDBStart	     ;;
+      my-stop) mariaDBStop	     ;;
+      -V|--verbose) verboseKey=1     ;;
+      *) 
+	echo -e "${c[1]}Opção inválida: tente $(basename "$0") --help${c[0]}" && exit 1		;;
     esac
     shift
   done
